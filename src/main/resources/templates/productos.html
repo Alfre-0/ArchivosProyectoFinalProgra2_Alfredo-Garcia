@@ -1,0 +1,91 @@
+<div class="row g-4">
+  <div class="col-12">
+    <h1 class="h3 mb-3">Productos</h1>
+  </div>
+
+  <div class="col-12" th:if="${#lists.isEmpty(productos)}">
+    <div class="alert alert-info">No hay productos disponibles.</div>
+  </div>
+
+  <div class="col-12 col-sm-6 col-md-4 col-lg-3" th:each="p : ${productos}">
+    <div class="card h-100 shadow-sm">
+      <img class="card-img-top"
+           th:src="${p.imagen} != null ? @{${p.imagen}} : 'https://via.placeholder.com/400x300?text=No+Image'"
+           th:alt="${p.nombre}"
+           style="height:180px;object-fit:cover">
+
+      <div class="card-body d-flex flex-column">
+        <h5 class="card-title" th:text="${p.nombre}">Nombre</h5>
+        <p class="card-text text-muted small" th:text="${p.codigo}">Código</p>
+        <p class="mt-auto fs-5">
+          Q <span th:text="${#numbers.formatDecimal(p.precio, 1, 'COMMA', 2, 'POINT')}">0.00</span>
+        </p>
+
+        <button type="button"
+                class="btn btn-primary w-100 js-add"
+                th:attr="data-id=${p.idProducto},data-name=${p.nombre}">
+          Agregar al carrito
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de confirmación -->
+<div class="modal fade" id="addedModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content p-4 text-center">
+      <div class="checkmark mx-auto mb-3 text-success">
+        <svg viewBox="0 0 52 52" width="64" height="64">
+          <circle class="check-circle" cx="26" cy="26" r="24"></circle>
+          <path class="check-check" fill="none" d="M14 27 L22 34 L38 18"></path>
+        </svg>
+      </div>
+      <h5 class="mb-1">¡Producto añadido!</h5>
+      <p id="modalProductName" class="text-muted mb-3">Se agregó correctamente.</p>
+      <div class="d-flex gap-2 justify-content-center">
+        <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Seguir comprando</button>
+        <a href="/carrito" class="btn btn-primary">Ver carrito</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Asegura que el script se ejecute cuando el DOM esté listo y usa DELEGACIÓN
+  document.addEventListener('DOMContentLoaded', () => {
+    document.body.addEventListener('click', async (ev) => {
+      const btn = ev.target.closest('.js-add');
+      if (!btn) return;
+
+      const id = btn.getAttribute('data-id');
+      const name = btn.getAttribute('data-name');
+      if (!id) return;
+
+      try {
+        const res = await fetch(`/api/carrito/agregar?codUsuario=demo&idProducto=${id}&cantidad=1`, { method: 'POST' });
+        if (!res.ok) throw new Error('No se pudo agregar');
+
+        // Actualiza el modal y muéstralo
+        document.getElementById('modalProductName').textContent = `Se agregó: ${name}`;
+        restartCheckAnimation();
+        const modal = new bootstrap.Modal(document.getElementById('addedModal'));
+        modal.show();
+      } catch (e) {
+        alert('Ocurrió un error al agregar el producto.');
+      }
+    });
+  });
+
+  // Reinicia animación del check
+  function restartCheckAnimation() {
+    const circle = document.querySelector('.check-circle');
+    const check = document.querySelector('.check-check');
+    if (!circle || !check) return;
+    circle.style.animation = 'none';
+    check.style.animation = 'none';
+    void circle.offsetWidth; void check.offsetWidth;
+    circle.style.animation = null;
+    check.style.animation = null;
+  }
+</script>

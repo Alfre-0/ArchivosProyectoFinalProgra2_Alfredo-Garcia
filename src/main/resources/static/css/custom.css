@@ -1,0 +1,51 @@
+/* Imagen de cards */
+.card-img-top {
+  object-fit: cover;
+  height: 180px;
+}
+
+/* Animación del check en el modal de "añadido" */
+.checkmark svg { display: block; }
+.check-circle, .check-check {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+.check-circle {
+  stroke-dasharray: 200;
+  stroke-dashoffset: 200;
+  animation: cm-circle 0.5s ease forwards;
+}
+.check-check {
+  stroke-dasharray: 48;
+  stroke-dashoffset: 48;
+  animation: cm-check 0.35s 0.5s ease forwards;
+}
+@keyframes cm-circle { to { stroke-dashoffset: 0; } }
+@keyframes cm-check { to { stroke-dashoffset: 0; } }
+
+.navbar-brand {
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.btn-primary {
+  background-color: #0d6efd;
+  border: none;
+  transition: all 0.2s;
+}
+
+.btn-primary:hover {
+  background-color: #0b5ed7;
+  transform: translateY(-1px);
+}
+
+.card {
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+}

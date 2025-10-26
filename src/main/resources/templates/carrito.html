@@ -1,0 +1,146 @@
+<div class="row g-4">
+  <div class="col-12 d-flex align-items-center justify-content-between">
+    <h1 class="h3 mb-0">Tu carrito</h1>
+    <div class="d-flex gap-2">
+      <a th:href="@{/productos}" class="btn btn-outline-secondary">← Seguir comprando</a>
+      <button id="btnVaciar" class="btn btn-outline-danger"
+              th:disabled="${#lists.isEmpty(items)}"
+              th:data-user="${codUsuario}">
+        Vaciar carrito
+      </button>
+    </div>
+  </div>
+
+  <div class="col-12" th:if="${#lists.isEmpty(items)}">
+    <div class="alert alert-info shadow-sm">
+      Aún no tienes productos en el carrito.
+      <a th:href="@{/productos}" class="alert-link">Ver productos</a>
+    </div>
+  </div>
+
+  <div class="col-12" th:if="${!#lists.isEmpty(items)}">
+    <div class="table-responsive shadow-sm rounded">
+      <table class="table align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th style="width: 72px;">Img</th>
+            <th>Producto</th>
+            <th class="text-center">Código</th>
+            <th class="text-end">Precio</th>
+            <th class="text-center">Cant.</th>
+            <th class="text-end">Subtotal</th>
+            <th class="text-center" style="width: 110px;">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr th:each="it : ${items}">
+            <td>
+              <img th:src="${it.producto != null ? it.producto.imagen : ''}"
+                   alt="" class="rounded border" style="width:60px;height:60px;object-fit:cover"
+                   onerror="this.src='https://via.placeholder.com/60x60?text=No+Img'">
+            </td>
+            <td>
+              <div class="fw-semibold" th:text="${it.producto != null ? it.producto.nombre : '—'}">Nombre</div>
+              <div class="text-muted small" th:text="'ID Item: ' + ${it.idShoppingCart}">ID Item</div>
+            </td>
+            <td class="text-center" th:text="${it.producto != null ? it.producto.codigo : '—'}">COD</td>
+            <td class="text-end">
+              Q <span th:text="${#numbers.formatDecimal(it.producto != null ? it.producto.precio : 0, 1, 'COMMA', 2, 'POINT')}">0.00</span>
+            </td>
+            <td class="text-center" th:text="${it.cantidad}">1</td>
+            <td class="text-end">
+              Q <span th:text="${#numbers.formatDecimal((it.producto != null ? it.producto.precio : 0) * (it.cantidad != null ? it.cantidad : 0), 1, 'COMMA', 2, 'POINT')}">0.00</span>
+            </td>
+            <td class="text-center">
+              <button class="btn btn-sm btn-outline-danger js-del"
+                      th:attr="data-id=${it.idShoppingCart}">
+                Eliminar
+              </button>
+            </td>
+          </tr>
+        </tbody>
+        <tfoot class="table-light">
+          <tr>
+            <th colspan="4"></th>
+            <th class="text-center">
+              <span class="text-muted">Total ítems</span><br>
+              <span class="badge text-bg-secondary" th:text="${totalItems}">0</span>
+            </th>
+            <th class="text-end">
+              <span class="text-muted">Total</span><br>
+              <span class="fs-5 fw-semibold">
+                Q <span th:text="${#numbers.formatDecimal(total, 1, 'COMMA', 2, 'POINT')}">0.00</span>
+              </span>
+            </th>
+            <th></th>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Bootstrap para mensajes -->
+<div class="position-fixed top-0 end-0 p-3" style="z-index: 9999">
+  <div id="liveToast" class="toast align-items-center text-bg-success border-0" role="alert">
+    <div class="d-flex">
+      <div class="toast-body fw-semibold" id="toastMsg">Acción realizada</div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const toastEl = document.getElementById('liveToast');
+    const toastMsg = document.getElementById('toastMsg');
+    const toast = new bootstrap.Toast(toastEl, { delay: 2500 });
+
+    function showToast(message, isError = false) {
+      toastEl.classList.remove('text-bg-success', 'text-bg-danger');
+      toastEl.classList.add(isError ? 'text-bg-danger' : 'text-bg-success');
+      toastMsg.textContent = message;
+      toast.show();
+    }
+
+    // Delegación para eliminar ítem
+    document.body.addEventListener('click', async (ev) => {
+      const btn = ev.target.closest('.js-del');
+      if (!btn) return;
+
+      const id = btn.getAttribute('data-id');
+      if (!id) return;
+      if (!confirm('¿Eliminar este producto del carrito?')) return;
+
+      try {
+        const res = await fetch(`/api/carrito/item/${id}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error();
+        showToast('Producto eliminado del carrito');
+        setTimeout(() => location.reload(), 2000);
+      } catch {
+        showToast('Error al eliminar el producto', true);
+      }
+    });
+
+    // Vaciar carrito
+    const btnVaciar = document.getElementById('btnVaciar');
+    if (btnVaciar) {
+      btnVaciar.addEventListener('click', async () => {
+        const user = btnVaciar.getAttribute('data-user');
+        if (!user) return;
+        if (!confirm('¿Vaciar todo el carrito?')) return;
+
+        try {
+          const res = await fetch(`/api/carrito/vaciar/${user}`, { method: 'DELETE' });
+          if (!res.ok) throw new Error();
+          showToast('Carrito vaciado correctamente');
+          setTimeout(() => location.reload(), 2000);
+        } catch {
+          showToast('Error al vaciar el carrito', true);
+        }
+      });
+    }
+  });
+</script>
+
+
